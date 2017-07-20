@@ -80,9 +80,20 @@ class Customer
     protected $customerGroup;
 
     /**
+     * @var \Magento\Framework\Api\SearchCriteriaBuilder
+     */
+    protected $searchCriteriaBuilder;
+
+    /**
+     * @var \Magento\Tax\Api\TaxClassRepositoryInterface
+     */
+    protected $taxClassRepository;
+
+    /**
      * @var string
      */
     protected $b2cCustomerGroup = 'B2C Registered Users';
+
 
     /**
      * Customer constructor.
@@ -96,6 +107,8 @@ class Customer
      * @param \Magento\Framework\Api\DataObjectHelper $dataObjectHelper
      * @param \Magento\Framework\App\State $appState
      * @param \Magento\Customer\Model\GroupFactory $customerGroup
+     * @param \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder
+     * @param \Magento\Tax\Api\TaxClassRepositoryInterface $taxClassRepository
      */
     public function __construct(
         SampleDataContext $sampleDataContext,
@@ -107,7 +120,9 @@ class Customer
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Framework\Api\DataObjectHelper $dataObjectHelper,
         \Magento\Framework\App\State $appState,
-        \Magento\Customer\Model\GroupFactory $customerGroup
+        \Magento\Customer\Model\GroupFactory $customerGroup,
+        \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
+        \Magento\Tax\Api\TaxClassRepositoryInterface $taxClassRepository
     ) {
         $this->fixtureManager = $sampleDataContext->getFixtureManager();
         $this->csvReader = $sampleDataContext->getCsvReader();
@@ -120,6 +135,8 @@ class Customer
         $this->dataObjectHelper = $dataObjectHelper;
         $this->appState = $appState;
         $this->customerGroup = $customerGroup;
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->taxClassRespository = $taxClassRepository;
 
     }
 
@@ -131,7 +148,16 @@ class Customer
         //create group
         $groupAttribute = $this->customerGroup->create();
         $groupAttribute->setCode($this->b2cCustomerGroup);
-        //$groupAttribute->set
+        $searchCriteria = $this->searchCriteriaBuilder->addFilter(
+            'class_type',
+            'CUSTOMER',
+            'eq'
+        )->create();
+        $items = $this->taxClassRespository->getList($searchCriteria);
+        foreach ($items->getItems() as $value) {
+            $taxClassId=$value->getClassId();
+        }
+        $groupAttribute->setTaxClassId($taxClassId);
         $groupAttribute->save();
         $groupId = $groupAttribute->getId();
 
