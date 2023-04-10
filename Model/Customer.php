@@ -87,7 +87,7 @@ class Customer
     /**
      * @var \Magento\Tax\Api\TaxClassRepositoryInterface
      */
-    protected $taxClassRepository;
+    protected $taxClassRespository;
 
     /**
      * @var string
